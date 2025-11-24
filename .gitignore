@@ -1,0 +1,120 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+*.env
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+.next/
+out/
+
+# Backend specific
+backend/dist/
+backend/.env
+backend/.env.*
+backend/artifacts/
+backend/cache/
+backend/typechain-types/
+backend/coverage/
+backend/.nyc_output/
+
+# Frontend specific
+frontend/dist/
+frontend/.env
+frontend/.env.*
+frontend/.vite/
+frontend/build/
+
+# Prisma
+backend/prisma/migrations/
+!backend/prisma/migrations/.gitkeep
+
+# Hardhat
+backend/cache/
+backend/artifacts/
+backend/typechain-types/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+.jest/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Docker
+docker-compose.override.yml
+*.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.temp/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Redis
+dump.rdb
+
+# Misc
+*.pem
+*.key
+*.cert
+.secret
+.secrets
+
+# Documentation files (except README.md)
+docs/*.md
+backend/*.md
+frontend/*.md
+*.md
+!README.md
+
+# Scripts
+test_company_flow.sh
+

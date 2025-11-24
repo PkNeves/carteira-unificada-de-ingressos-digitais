@@ -1,0 +1,21 @@
+# Este arquivo pode ser copiado para docker-compose.override.yml
+# para personalizar configurações locais sem modificar o docker-compose.yml principal
+# O docker-compose.override.yml é automaticamente carregado pelo Docker Compose
+
+version: '3.8'
+
+services:
+  backend:
+    # Descomente para usar volumes de desenvolvimento (hot reload)
+    # volumes:
+    #   - ./backend/src:/app/src
+    
+    # Descomente para adicionar variáveis de ambiente específicas do desenvolvimento
+    # environment:
+    #   - NODE_ENV=development
+
+  frontend:
+    # Descomente para usar volumes de desenvolvimento (hot reload)
+    # volumes:
+    #   - ./frontend/src:/app/src
+

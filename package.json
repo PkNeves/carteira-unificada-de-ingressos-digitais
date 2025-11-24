@@ -1,0 +1,14 @@
+{
+  "name": "ticket-wallet",
+  "version": "1.0.0",
+  "description": "Carteira Unificada de Ingressos NFT",
+  "private": true,
+  "scripts": {
+    "chain": "cd backend && npx hardhat node --network hardhat",
+    "deploy": "cd backend && npx hardhat run scripts/deploy.ts --network localhost"
+  },
+  "keywords": ["nft", "tickets", "blockchain"],
+  "author": "",
+  "license": "ISC"
+}
+

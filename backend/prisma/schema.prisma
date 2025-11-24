@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(uuid())
+  externalId       String   @unique
+  email            String   @unique
+  password         String
+  walletAddress    String?  @unique
+  privateKey       String
+  privateKeyBackup String?
+  salt             String
+  backupSalt       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  tickets          Ticket[]
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  events    Event[]
+}
+
+model Event {
+  id          String    @id @default(uuid())
+  externalId  String
+  companyId   String
+  name        String
+  description String?
+  active      Boolean   @default(true)
+  bannerUrl   String?
+  startDate   DateTime
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  postbackUrl String?
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  tickets     Ticket[]
+}
+
+model Ticket {
+  id          String    @id @default(uuid())
+  externalId  String
+  name        String
+  description String?
+  rarity      String    @default("common")
+  bannerUrl   String?
+  amount      Int       @default(1)
+  seat        String?
+  sector      String?
+  status      String    @default("valid")
+  startDate   DateTime
+  txHash      String?
+  eventId     String?
+  tokenId     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  event       Event?    @relation(fields: [eventId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

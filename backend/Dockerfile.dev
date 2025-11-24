@@ -1,0 +1,26 @@
+FROM node:18-alpine
+
+# Instala dependências do sistema necessárias
+RUN apk add --no-cache libc6-compat netcat-openbsd openssl
+
+WORKDIR /app
+
+# Copia arquivos de dependências
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Instala dependências (incluindo devDependencies para tsx)
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+# Gera cliente Prisma
+RUN npx prisma generate
+
+# Expõe porta
+EXPOSE 3000
+
+# Script de inicialização que aguarda o banco estar pronto
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["npm", "run", "dev"]
