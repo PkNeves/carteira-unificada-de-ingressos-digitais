@@ -117,4 +117,5 @@ frontend/*.md
 
 # Scripts
 test_company_flow.sh
+backend/scripts/
 
