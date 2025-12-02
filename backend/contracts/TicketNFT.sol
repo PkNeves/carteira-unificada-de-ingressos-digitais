@@ -32,7 +32,6 @@ contract TicketNFT is ERC721, ERC721URIStorage, Ownable {
     }
 
     mapping(uint256 => TicketInfo) public ticketInfo;
-    mapping(uint256 => bool) public eventExists;
 
     event TicketMinted(
         uint256 indexed tokenId,
@@ -92,7 +91,7 @@ contract TicketNFT is ERC721, ERC721URIStorage, Ownable {
         string memory eventName,
         uint256 createdAt,
         string memory metadataURI
-    ) public returns (uint256) {
+    ) public onlyOwner returns (uint256) {
         require(to != address(0), "Cannot mint to zero address");
         
         uint256 newTokenId = _nextTokenId;
