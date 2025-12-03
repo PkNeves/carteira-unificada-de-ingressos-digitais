@@ -15,10 +15,67 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
-app.use(cors());
+// Configuração CORS
+function getAllowedOrigins(): string[] {
+  if (process.env.ALLOWED_ORIGINS) {
+    return process.env.ALLOWED_ORIGINS.split(",").map((origin) =>
+      origin.trim()
+    );
+  }
+
+  // Padrão para desenvolvimento local
+  if (process.env.NODE_ENV === "development") {
+    return ["http://localhost:5173", "http://localhost:5174"];
+  }
+
+  // Em produção, exige configuração explícita
+  throw new Error(
+    "ALLOWED_ORIGINS não configurada. Configure a variável de ambiente ALLOWED_ORIGINS."
+  );
+}
+
+function isOriginAllowed(
+  origin: string | undefined,
+  allowedOrigins: string[]
+): boolean {
+  // Permite requisições sem origin (ex: Postman, curl, mobile apps)
+  if (!origin) return true;
+
+  // Permite todas as origens se configurado com *
+  if (allowedOrigins.includes("*")) return true;
+
+  // Verifica se a origem está na lista permitida
+  return allowedOrigins.includes(origin);
+}
+
+const allowedOrigins = getAllowedOrigins();
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin, allowedOrigins)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origem ${origin} não permitida pelo CORS`));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Middleware para forçar HTTPS em produção
+if (process.env.NODE_ENV === "production") {
+  app.use((req, res, next) => {
+    if (req.header("x-forwarded-proto") !== "https") {
+      res.redirect(301, `https://${req.header("host")}${req.url}`);
+    } else {
+      next();
+    }
+  });
+}
 
 // Rotas - IMPORTANTE: rotas mais específicas primeiro
 app.use("/api/auth", authRoutes);
