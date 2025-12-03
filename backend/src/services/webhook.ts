@@ -100,10 +100,10 @@ export async function sendConfirmationWebhook(ticketId: string): Promise<void> {
       `Erro ao enviar webhook para ticket ${ticketId}:`,
       error.message
     );
-    // Log mais detalhado em desenvolvimento
+    // Log apenas status em caso de erro (não loga dados sensíveis)
     if (error.response) {
       console.error("Response status:", error.response.status);
-      console.error("Response data:", error.response.data);
+      // Não loga response.data para evitar expor dados sensíveis
     }
   }
 }
