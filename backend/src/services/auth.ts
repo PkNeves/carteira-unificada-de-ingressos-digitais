@@ -1,11 +1,18 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
 import prisma from "../utils/prisma";
 import { getOrCreateUserWallet } from "./wallet";
 
-const JWT_SECRET: string =
-  process.env.JWT_SECRET || "default-secret-change-in-production";
+function getJwtSecret(): string {
+  if (!process.env.JWT_SECRET) {
+    throw new Error(
+      "JWT_SECRET não configurado. Configure a variável de ambiente JWT_SECRET."
+    );
+  }
+  return process.env.JWT_SECRET;
+}
+
+const JWT_SECRET: string = getJwtSecret();
 const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || "7d";
 
 /**
@@ -133,6 +140,12 @@ export async function registerUser(
   password: string,
   confirmPassword: string
 ): Promise<{ id: string; email: string; token: string }> {
+  // Valida formato de email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new Error("Formato de email inválido");
+  }
+
   // Valida confirmação de senha
   if (password !== confirmPassword) {
     throw new Error("Senha e confirmação de senha não coincidem");
@@ -157,10 +170,7 @@ export async function registerUser(
 
   // Cria usuário com carteira blockchain
   // Passa senha em texto para criptografar chave privada
-  const { userId, address } = await getOrCreateUserWallet(
-    email,
-    password
-  );
+  const { userId, address } = await getOrCreateUserWallet(email, password);
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
