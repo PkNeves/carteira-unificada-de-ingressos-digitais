@@ -4,14 +4,59 @@ import prisma from "../utils/prisma";
 import { sendConfirmationWebhook } from "./webhook";
 import { getBlockchainConfig } from "../config/blockchain";
 
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "";
+function getContractAddress(): string {
+  const contractAddress = process.env.CONTRACT_ADDRESS;
 
-const SYSTEM_WALLET_PRIVATE_KEY = process.env.SYSTEM_WALLET_PRIVATE_KEY;
+  if (!contractAddress) {
+    throw new Error(
+      "CONTRACT_ADDRESS não configurada. Configure a variável de ambiente CONTRACT_ADDRESS " +
+        "após fazer o deploy do contrato."
+    );
+  }
+
+  return contractAddress;
+}
+
+function getSystemWalletPrivateKey(): string {
+  const privateKey = process.env.SYSTEM_WALLET_PRIVATE_KEY;
+
+  if (!privateKey) {
+    throw new Error(
+      "SYSTEM_WALLET_PRIVATE_KEY não configurada. Configure a variável de ambiente SYSTEM_WALLET_PRIVATE_KEY " +
+        "com a chave privada da carteira que fez o deploy do contrato."
+    );
+  }
+
+  return privateKey;
+}
+
+const CONTRACT_ADDRESS = getContractAddress();
+const SYSTEM_WALLET_PRIVATE_KEY = getSystemWalletPrivateKey();
 
 // Converte UUID para uint256 usando hash SHA-256
 function uuidToBigInt(uuid: string): bigint {
   const hash = crypto.createHash("sha256").update(uuid).digest("hex");
   return BigInt("0x" + hash.substring(0, 16));
+}
+
+function getApiBaseUrl(): string {
+  if (process.env.API_BASE_URL) {
+    return process.env.API_BASE_URL;
+  }
+
+  if (process.env.FRONTEND_URL) {
+    const frontendUrl = process.env.FRONTEND_URL;
+    const urlWithoutPort = frontendUrl.replace(/:\d+$/, "");
+    return `${urlWithoutPort}:3001`;
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:3001";
+  }
+
+  throw new Error(
+    "API_BASE_URL não configurada. Configure a variável de ambiente API_BASE_URL ou FRONTEND_URL."
+  );
 }
 
 export async function syncTicketToBlockchain(ticketId: string): Promise<void> {
@@ -47,18 +92,6 @@ export async function syncTicketToBlockchain(ticketId: string): Promise<void> {
 
   if (!ticket.user.walletAddress) {
     throw new Error("Usuário não possui endereço de carteira");
-  }
-
-  if (!CONTRACT_ADDRESS) {
-    throw new Error(
-      "Endereço do contrato não configurado. Configure CONTRACT_ADDRESS no .env após fazer deploy."
-    );
-  }
-
-  if (!SYSTEM_WALLET_PRIVATE_KEY) {
-    throw new Error(
-      "SYSTEM_WALLET_PRIVATE_KEY não configurada. Configure no .env antes de usar."
-    );
   }
 
   try {
@@ -101,7 +134,8 @@ export async function syncTicketToBlockchain(ticketId: string): Promise<void> {
       systemWallet
     );
 
-    const metadataURI = `https://api.ticketwallet.com/metadata/${ticket.externalId}`;
+    const apiBaseUrl = getApiBaseUrl();
+    const metadataURI = `${apiBaseUrl}/api/metadata/${ticket.externalId}`;
 
     const ticketIdBigInt = uuidToBigInt(ticket.id);
     const eventIdBigInt = ticket.eventId
