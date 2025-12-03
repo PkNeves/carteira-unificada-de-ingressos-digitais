@@ -9,7 +9,16 @@ const IV_LENGTH = 16;
 const SALT_LENGTH = 32;
 const ITERATIONS = 100000;
 
-const MASTER_ENCRYPTION_KEY = process.env.MASTER_ENCRYPTION_KEY;
+function getMasterEncryptionKey(): string {
+  if (!process.env.MASTER_ENCRYPTION_KEY) {
+    throw new Error(
+      "MASTER_ENCRYPTION_KEY não configurada. Configure a variável de ambiente MASTER_ENCRYPTION_KEY "
+    );
+  }
+  return process.env.MASTER_ENCRYPTION_KEY;
+}
+
+const MASTER_ENCRYPTION_KEY = getMasterEncryptionKey();
 
 export function generateWallet(): { address: string; privateKey: string } {
   const wallet = ethers.Wallet.createRandom();
