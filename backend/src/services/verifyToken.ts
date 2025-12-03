@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
+import { getBlockchainConfig } from "../config/blockchain";
 
-const RPC_URL = process.env.SEPOLIA_RPC_URL || "http://localhost:8545";
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "";
 
 const CONTRACT_ABI = [
@@ -38,7 +38,8 @@ export async function verifyTokenOnChain(
   }
 
   try {
-    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    const config = getBlockchainConfig();
+    const provider = new ethers.JsonRpcProvider(config.rpcUrl);
     const contract = new ethers.Contract(
       CONTRACT_ADDRESS,
       CONTRACT_ABI,

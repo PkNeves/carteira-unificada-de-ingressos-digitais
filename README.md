@@ -1,12 +1,12 @@
 # Ticket Wallet
 
-Sistema de carteira de ingressos NFT. Backend em Node/TypeScript, frontend React, contratos Solidity na Sepolia.
+Sistema de carteira de ingressos NFT. Backend em Node/TypeScript, frontend React, contratos Solidity com suporte multi-rede.
 
 ## Tech Stack
 
 - Backend: Node.js, TypeScript, Express
 - DB: PostgreSQL + Prisma
-- Blockchain: Sepolia (testnet)
+- Blockchain: Suporte dinâmico para múltiplas redes (Sepolia, Polygon, Polygon Mumbai, localhost)
 - Contratos: ERC-721 (OpenZeppelin)
 - Frontend: React + Vite
 - Fila: Bull + Redis
@@ -55,13 +55,52 @@ npm run hardhat:compile
 npm run dev
 ```
 
-Se quiser fazer deploy do contrato na Sepolia:
+### Configuração de Rede Blockchain
+
+O sistema suporta múltiplas redes blockchain através de variáveis de ambiente genéricas:
+
+**Variáveis de ambiente (backend/.env):**
 
 ```bash
-npm run hardhat:deploy:sepolia
+# Rede blockchain (sepolia | polygon | polygon-mumbai | localhost)
+BLOCKCHAIN_NETWORK=sepolia
+
+# RPC URL (obrigatória) - use qualquer provedor RPC (Alchemy, Infura, QuickNode, etc)
+BLOCKCHAIN_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/SUA_KEY
+
+# Endereço do contrato deployado na rede escolhida
+CONTRACT_ADDRESS=0x...
+
+# Chave privada da carteira do sistema (OBRIGATÓRIA)
+# IMPORTANTE: Esta deve ser a MESMA carteira que faz o deploy do contrato
+# O contrato tem restrição onlyOwner, então apenas quem fez deploy pode mintar tickets
+SYSTEM_WALLET_PRIVATE_KEY=0x...
+
+# Opcional: para verificação de contratos no explorer
+POLYGONSCAN_API_KEY=sua_chave  # apenas se usar Polygon
 ```
 
-Depois cola o endereço do contrato no CONTRACT_ADDRESS do .env
+**Deploy do contrato:**
+
+⚠️ **IMPORTANTE**: Configure `SYSTEM_WALLET_PRIVATE_KEY` no `.env` ANTES de fazer o deploy. A mesma carteira que faz deploy será owner do contrato e será usada para mintar tickets.
+
+```bash
+# Sepolia (testnet Ethereum)
+npm run hardhat:deploy:sepolia
+
+# Polygon Mainnet
+npm run hardhat:deploy:polygon
+
+# Polygon Mumbai (testnet)
+npm run hardhat:deploy:polygon-mumbai
+
+# Localhost (Hardhat)
+npm run hardhat:deploy
+```
+
+Depois do deploy:
+1. Copie o endereço do contrato para `CONTRACT_ADDRESS` no `.env`
+2. Certifique-se de que `SYSTEM_WALLET_PRIVATE_KEY` está configurada com a mesma chave usada no deploy
 
 Frontend:
 
@@ -79,7 +118,8 @@ Usuários podem se registrar, receber ingressos como NFT e ver na carteira. Comp
 
 - Carteira custodiada (chaves criptografadas)
 - Sincronização automática off-chain -> on-chain
-- Contrato ERC-721 na Sepolia
+- Contrato ERC-721 compatível com múltiplas redes
+- Sistema dinâmico de configuração de rede blockchain
 
 ## API
 

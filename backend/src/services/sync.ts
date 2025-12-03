@@ -2,12 +2,9 @@ import { ethers } from "ethers";
 import crypto from "crypto";
 import prisma from "../utils/prisma";
 import { sendConfirmationWebhook } from "./webhook";
+import { getBlockchainConfig } from "../config/blockchain";
 
-const RPC_URL = process.env.SEPOLIA_RPC_URL || "http://localhost:8545";
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "";
-
-const isSepoliaNetwork =
-  RPC_URL.includes("sepolia") || RPC_URL.includes("alchemy.com");
 
 const SYSTEM_WALLET_PRIVATE_KEY =
   process.env.SYSTEM_WALLET_PRIVATE_KEY ||
@@ -65,28 +62,40 @@ export async function syncTicketToBlockchain(ticketId: string): Promise<void> {
   }
 
   try {
-    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    const config = getBlockchainConfig();
+    const provider = new ethers.JsonRpcProvider(config.rpcUrl);
     const code = await provider.getCode(CONTRACT_ADDRESS);
     if (code === "0x") {
-      const networkInfo = isSepoliaNetwork ? "Sepolia" : "local";
       throw new Error(
-        `Contrato não encontrado no endereço ${CONTRACT_ADDRESS} na rede ${networkInfo}. ` +
-          `Certifique-se de que o contrato foi deployado corretamente. ` +
-          `${
-            isSepoliaNetwork
-              ? "Execute: npm run hardhat:deploy:sepolia"
-              : "Execute: npm run hardhat:deploy"
-          }`
+        `Contrato não encontrado no endereço ${CONTRACT_ADDRESS} na rede ${config.network}`
       );
     }
 
     const systemWallet = new ethers.Wallet(SYSTEM_WALLET_PRIVATE_KEY, provider);
     const contractABI = [
+      "function owner() public view returns (address)",
       "function mintTicket(address to, uint256 id, string memory externalId, string memory name, string memory description, string memory bannerUrl, uint256 startDate, uint256 amount, string memory seat, string memory sector, uint256 eventId, string memory eventName, uint256 createdAt, string memory metadataURI) public returns (uint256)",
       "function getTicketInfo(uint256 tokenId) public view returns (tuple(uint256 id, string externalId, string name, string description, uint8 rarity, string bannerUrl, uint256 startDate, uint256 amount, string seat, string sector, uint256 eventId, string eventName, uint256 createdAt))",
     ];
 
     const contract = new ethers.Contract(
+      CONTRACT_ADDRESS,
+      contractABI,
+      provider
+    );
+
+    // Verifica se a carteira do sistema é owner do contrato
+    const contractOwner = await contract.owner();
+    if (contractOwner.toLowerCase() !== systemWallet.address.toLowerCase()) {
+      throw new Error(
+        `Carteira do sistema (${systemWallet.address}) não é owner do contrato. ` +
+        `Owner atual: ${contractOwner}. ` +
+        `Configure SYSTEM_WALLET_PRIVATE_KEY com a chave da carteira que fez o deploy do contrato.`
+      );
+    }
+
+    // Reconecta o contrato com a carteira assinante para poder fazer transações
+    const contractWithSigner = new ethers.Contract(
       CONTRACT_ADDRESS,
       contractABI,
       systemWallet
@@ -113,7 +122,7 @@ export async function syncTicketToBlockchain(ticketId: string): Promise<void> {
     const sector = ticket.sector || "";
     const eventName = ticket.event?.name || "";
 
-    const tx = await contract.mintTicket(
+    const tx = await contractWithSigner.mintTicket(
       ticket.user.walletAddress,
       ticketIdBigInt, // id (hash do UUID do ticket)
       ticket.externalId, // externalId
@@ -145,7 +154,7 @@ export async function syncTicketToBlockchain(ticketId: string): Promise<void> {
 
     if (ticketMintedEvent) {
       try {
-        const decoded = contract.interface.decodeEventLog(
+        const decoded = contractWithSigner.interface.decodeEventLog(
           "TicketMinted",
           ticketMintedEvent.data,
           ticketMintedEvent.topics
@@ -173,7 +182,7 @@ export async function syncTicketToBlockchain(ticketId: string): Promise<void> {
     } else if (tokenId) {
       // Lê do contrato como fallback
       try {
-        const ticketInfo = await contract.getTicketInfo(tokenId);
+        const ticketInfo = await contractWithSigner.getTicketInfo(tokenId);
         const rarityMap: { [key: number]: string } = {
           0: "common",
           1: "rare",
