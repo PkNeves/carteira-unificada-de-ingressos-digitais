@@ -713,10 +713,30 @@ export async function convertImageToBase64(
       return;
     }
 
+    // Valida formato de URL
+    let parsedUrl;
     try {
-      new URL(url);
+      parsedUrl = new URL(url);
     } catch {
       res.status(400).json({ error: "URL inválida" });
+      return;
+    }
+
+    // Valida protocolo (apenas http/https)
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      res.status(400).json({ error: "Apenas URLs HTTP/HTTPS são permitidas" });
+      return;
+    }
+
+    // Valida extensão de imagem
+    const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+    const hasValidExtension = validExtensions.some(ext => 
+      parsedUrl.pathname.toLowerCase().endsWith(ext)
+    );
+    if (!hasValidExtension) {
+      res.status(400).json({ 
+        error: "URL deve apontar para uma imagem válida (jpg, jpeg, png, gif, webp, svg)" 
+      });
       return;
     }
 
@@ -726,6 +746,9 @@ export async function convertImageToBase64(
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       },
+      timeout: 10000, // 10 segundos
+      maxContentLength: 10 * 1024 * 1024, // 10MB máximo
+      maxBodyLength: 10 * 1024 * 1024,
     });
 
     const buffer = Buffer.from(response.data);
