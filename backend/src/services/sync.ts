@@ -6,9 +6,7 @@ import { getBlockchainConfig } from "../config/blockchain";
 
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "";
 
-const SYSTEM_WALLET_PRIVATE_KEY =
-  process.env.SYSTEM_WALLET_PRIVATE_KEY ||
-  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+const SYSTEM_WALLET_PRIVATE_KEY = process.env.SYSTEM_WALLET_PRIVATE_KEY;
 
 // Converte UUID para uint256 usando hash SHA-256
 function uuidToBigInt(uuid: string): bigint {
@@ -58,7 +56,9 @@ export async function syncTicketToBlockchain(ticketId: string): Promise<void> {
   }
 
   if (!SYSTEM_WALLET_PRIVATE_KEY) {
-    throw new Error("Chave privada da carteira do sistema não configurada");
+    throw new Error(
+      "SYSTEM_WALLET_PRIVATE_KEY não configurada. Configure no .env antes de usar."
+    );
   }
 
   try {
@@ -89,8 +89,8 @@ export async function syncTicketToBlockchain(ticketId: string): Promise<void> {
     if (contractOwner.toLowerCase() !== systemWallet.address.toLowerCase()) {
       throw new Error(
         `Carteira do sistema (${systemWallet.address}) não é owner do contrato. ` +
-        `Owner atual: ${contractOwner}. ` +
-        `Configure SYSTEM_WALLET_PRIVATE_KEY com a chave da carteira que fez o deploy do contrato.`
+          `Owner atual: ${contractOwner}. ` +
+          `Configure SYSTEM_WALLET_PRIVATE_KEY com a chave da carteira que fez o deploy do contrato.`
       );
     }
 
