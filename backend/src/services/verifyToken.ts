@@ -1,8 +1,6 @@
 import { ethers } from "ethers";
 import { getBlockchainConfig } from "../config/blockchain";
 
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "";
-
 const CONTRACT_ABI = [
   "function ownerOf(uint256 tokenId) public view returns (address)",
   "function getTicketInfo(uint256 tokenId) public view returns (tuple(uint256 id, string externalId, string name, string description, uint8 rarity, string bannerUrl, uint256 startDate, uint256 amount, string seat, string sector, uint256 eventId, string eventName, uint256 createdAt))",
@@ -33,8 +31,12 @@ export interface OnChainTicketData {
 export async function verifyTokenOnChain(
   tokenId: string
 ): Promise<OnChainTicketData> {
+  const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
+
   if (!CONTRACT_ADDRESS) {
-    throw new Error("Endereço do contrato não configurado");
+    throw new Error(
+      "CONTRACT_ADDRESS não configurada. Configure a variável de ambiente para verificar tickets na blockchain."
+    );
   }
 
   try {

@@ -10,7 +10,7 @@ function getContractAddress(): string {
   if (!contractAddress) {
     throw new Error(
       "CONTRACT_ADDRESS não configurada. Configure a variável de ambiente CONTRACT_ADDRESS " +
-        "após fazer o deploy do contrato."
+        "após fazer o deploy do contrato para habilitar sincronização blockchain."
     );
   }
 
@@ -23,15 +23,21 @@ function getSystemWalletPrivateKey(): string {
   if (!privateKey) {
     throw new Error(
       "SYSTEM_WALLET_PRIVATE_KEY não configurada. Configure a variável de ambiente SYSTEM_WALLET_PRIVATE_KEY " +
-        "com a chave privada da carteira que fez o deploy do contrato."
+        "com a chave privada da carteira que fez o deploy do contrato para habilitar sincronização blockchain."
     );
   }
 
   return privateKey;
 }
 
-const CONTRACT_ADDRESS = getContractAddress();
-const SYSTEM_WALLET_PRIVATE_KEY = getSystemWalletPrivateKey();
+// Aviso sobre configuração blockchain
+if (!process.env.CONTRACT_ADDRESS || !process.env.SYSTEM_WALLET_PRIVATE_KEY) {
+  console.warn(
+    "⚠️  AVISO: Configuração blockchain incompleta. " +
+      "Sincronização de tickets para blockchain está DESABILITADA. " +
+      "Configure CONTRACT_ADDRESS e SYSTEM_WALLET_PRIVATE_KEY para habilitar."
+  );
+}
 
 // Converte UUID para uint256 usando hash SHA-256
 function uuidToBigInt(uuid: string): bigint {
@@ -60,6 +66,10 @@ function getApiBaseUrl(): string {
 }
 
 export async function syncTicketToBlockchain(ticketId: string): Promise<void> {
+  // Valida configuração blockchain
+  const CONTRACT_ADDRESS = getContractAddress();
+  const SYSTEM_WALLET_PRIVATE_KEY = getSystemWalletPrivateKey();
+
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
     include: {
