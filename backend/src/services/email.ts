@@ -1,21 +1,26 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 function getFrontendUrl(): string {
-  const frontendUrl = process.env.FRONTEND_URL || 
-    (process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : undefined);
-  
+  const frontendUrl =
+    process.env.FRONTEND_URL ||
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:5173"
+      : undefined);
+
   if (!frontendUrl) {
-    throw new Error("FRONTEND_URL não configurada. Configure a variável de ambiente FRONTEND_URL.");
+    throw new Error(
+      "FRONTEND_URL não configurada. Configure a variável de ambiente FRONTEND_URL."
+    );
   }
-  
+
   return frontendUrl;
 }
 
 const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
-const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@ticketwallet.com';
+const EMAIL_FROM = process.env.EMAIL_FROM || "noreply@ticketwallet.com";
 const FRONTEND_URL = getFrontendUrl();
 
 // Configuração do transporter de email (lazy initialization)
@@ -28,7 +33,7 @@ function getTransporter(): nodemailer.Transporter {
         "Configuração de email incompleta. Configure SMTP_HOST, SMTP_USER e SMTP_PASS."
       );
     }
-    
+
     transporter = nodemailer.createTransport({
       host: SMTP_HOST,
       port: SMTP_PORT,
@@ -54,7 +59,7 @@ export async function sendWelcomeEmailWithTicket(
   const mailOptions = {
     from: EMAIL_FROM,
     to: email,
-    subject: '🎉 Bem-vindo! Você ganhou um ingresso NFT',
+    subject: "🎉 Bem-vindo! Você ganhou um ingresso NFT",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
         <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -129,8 +134,8 @@ Se você não solicitou este ingresso ou tem dúvidas, entre em contato conosco.
     const emailTransporter = getTransporter();
     await emailTransporter.sendMail(mailOptions);
   } catch (error) {
-    console.error('Erro ao enviar email de boas-vindas com ingresso:', error);
-    throw new Error('Falha ao enviar email');
+    console.error("Erro ao enviar email de boas-vindas com ingresso:", error);
+    throw new Error("Falha ao enviar email");
   }
 }
 
@@ -138,13 +143,11 @@ Se você não solicitou este ingresso ou tem dúvidas, entre em contato conosco.
  * Envia email de boas-vindas para usuário que se cadastrou por conta própria
  * (orienta a comprar ingressos em plataformas parceiras)
  */
-export async function sendWelcomeEmailNewUser(
-  email: string
-): Promise<void> {
+export async function sendWelcomeEmailNewUser(email: string): Promise<void> {
   const mailOptions = {
     from: EMAIL_FROM,
     to: email,
-    subject: '👋 Bem-vindo à Carteira de Ingressos NFT',
+    subject: "👋 Bem-vindo à Carteira de Ingressos NFT",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
         <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -155,7 +158,7 @@ export async function sendWelcomeEmailNewUser(
           </p>
           
           <p style="font-size: 16px; color: #333; line-height: 1.6;">
-            Agora você está pronto para receber e gerenciar seus ingressos NFT de forma segura e moderna.
+            Agora você está pronto para receber e compartilhar seus ingressos NFT de forma segura e moderna.
           </p>
           
           <div style="text-align: center; margin: 30px 0;">
@@ -198,7 +201,7 @@ export async function sendWelcomeEmailNewUser(
 
 Olá! Sua conta na Carteira de Ingressos NFT foi criada com sucesso!
 
-Agora você está pronto para receber e gerenciar seus ingressos NFT de forma segura e moderna.
+Agora você está pronto para receber compartilhar seus ingressos NFT de forma segura e moderna.
 
 Acesse sua carteira em: ${FRONTEND_URL}
 
@@ -224,8 +227,8 @@ Tem dúvidas? Entre em contato com nosso suporte.
     const emailTransporter = getTransporter();
     await emailTransporter.sendMail(mailOptions);
   } catch (error) {
-    console.error('Erro ao enviar email de boas-vindas:', error);
-    throw new Error('Falha ao enviar email');
+    console.error("Erro ao enviar email de boas-vindas:", error);
+    throw new Error("Falha ao enviar email");
   }
 }
 
@@ -235,4 +238,3 @@ Tem dúvidas? Entre em contato com nosso suporte.
 export function isEmailConfigured(): boolean {
   return !!(SMTP_USER && SMTP_PASS);
 }
-
