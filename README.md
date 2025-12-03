@@ -86,23 +86,75 @@ ETHERSCAN_V2_API_KEY=sua_chave
 
 ⚠️ **IMPORTANTE**: Configure `SYSTEM_WALLET_PRIVATE_KEY` no `.env` ANTES de fazer o deploy. A mesma carteira que faz deploy será owner do contrato e será usada para mintar tickets.
 
+**1. Gerar uma nova carteira (opcional, se não tiver):**
+
 ```bash
-# Sepolia (testnet Ethereum)
-npm run hardhat:deploy:sepolia
-
-# Polygon Mainnet
-npm run hardhat:deploy:polygon
-
-# Polygon Mumbai (testnet)
-npm run hardhat:deploy:polygon-mumbai
-
-# Localhost (Hardhat)
-npm run hardhat:deploy
+npx hardhat console
 ```
 
-Depois do deploy:
-1. Copie o endereço do contrato para `CONTRACT_ADDRESS` no `.env`
-2. Certifique-se de que `SYSTEM_WALLET_PRIVATE_KEY` está configurada com a mesma chave usada no deploy
+No console do Hardhat, execute:
+
+```javascript
+const wallet = ethers.Wallet.createRandom();
+console.log("Endereço:", wallet.address);
+console.log("Private Key:", wallet.privateKey);
+```
+
+Adicione a chave privada no `.env`:
+
+```
+SYSTEM_WALLET_PRIVATE_KEY=0x...
+```
+
+Para testnets, obtenha ETH de teste:
+
+- Sepolia: https://sepoliafaucet.com/
+- Polygon Mumbai: https://faucet.polygon.technology/
+
+**2. Fazer deploy do contrato:**
+
+```bash
+cd backend
+
+# Sepolia (testnet Ethereum)
+npx hardhat run --network sepolia <(cat <<'EOF'
+const hre = require("hardhat");
+async function main() {
+  const [deployer] = await hre.ethers.getSigners();
+  console.log("Deploying com:", deployer.address);
+  const TicketNFT = await hre.ethers.getContractFactory("TicketNFT");
+  const ticketNFT = await TicketNFT.deploy(deployer.address);
+  await ticketNFT.waitForDeployment();
+  console.log("Contrato deployado em:", await ticketNFT.getAddress());
+}
+main().catch(console.error);
+EOF
+)
+
+# Polygon Mainnet
+npx hardhat run --network polygon <(cat <<'EOF'
+# ... mesmo código acima
+EOF
+)
+
+# Polygon Mumbai (testnet)
+npx hardhat run --network polygonMumbai <(cat <<'EOF'
+# ... mesmo código acima
+EOF
+)
+
+# Localhost (Hardhat local)
+npx hardhat run --network localhost <(cat <<'EOF'
+# ... mesmo código acima
+EOF
+)
+```
+
+**3. Depois do deploy:**
+
+1. Copie o endereço do contrato exibido no terminal
+2. Adicione no `.env`: `CONTRACT_ADDRESS=0x...`
+3. Certifique-se de que `SYSTEM_WALLET_PRIVATE_KEY` está configurada com a mesma chave usada no deploy
 
 Frontend:
 
