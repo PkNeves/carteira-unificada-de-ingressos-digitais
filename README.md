@@ -76,8 +76,10 @@ CONTRACT_ADDRESS=0x...
 # O contrato tem restrição onlyOwner, então apenas quem fez deploy pode mintar tickets
 SYSTEM_WALLET_PRIVATE_KEY=0x...
 
-# Opcional: para verificação de contratos no explorer
-POLYGONSCAN_API_KEY=sua_chave  # apenas se usar Polygon
+# Obrigatória: para verificação de contratos no explorer (Etherscan API V2)
+# Funciona para todas as redes: Ethereum, Sepolia, Polygon, Polygon Mumbai
+# Obtenha em: https://etherscan.io/myapikey
+ETHERSCAN_V2_API_KEY=sua_chave
 ```
 
 **Deploy do contrato:**

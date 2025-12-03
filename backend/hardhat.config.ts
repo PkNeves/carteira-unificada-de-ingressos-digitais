@@ -29,9 +29,18 @@ function getDeployerPrivateKey(): string {
   return key;
 }
 
+function getEtherscanApiKey(): string {
+  const key = process.env.ETHERSCAN_V2_API_KEY;
+
+  if (!key) {
+    throw new Error("ETHERSCAN_V2_API_KEY não configurada no .env");
+  }
+
+  return key;
+}
+
 const deployerPrivateKey = getDeployerPrivateKey();
-const etherscanApiKey =
-  process.env.ETHERSCAN_V2_API_KEY || "DNXJA8RX2Q3VZ4URQIWP7Z68CJXQZSC6AW";
+const etherscanApiKey = getEtherscanApiKey();
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -91,8 +100,8 @@ const config: HardhatUserConfig = {
     apiKey: {
       mainnet: etherscanApiKey,
       sepolia: etherscanApiKey,
-      polygon: process.env.POLYGONSCAN_API_KEY || etherscanApiKey,
-      polygonMumbai: process.env.POLYGONSCAN_API_KEY || etherscanApiKey,
+      polygon: etherscanApiKey,
+      polygonMumbai: etherscanApiKey,
     },
   },
   verify: {
