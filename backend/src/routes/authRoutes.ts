@@ -7,6 +7,7 @@ import {
   getMeHandler,
 } from "../controllers/authController";
 import { authenticate } from "../middleware/auth";
+import { requireAdminKey } from "../middleware/adminAuth";
 import { validate } from "../middleware/validation";
 import {
   registerUserSchema,
@@ -17,17 +18,7 @@ import {
 
 const router = Router();
 
-// Rotas públicas
-router.post(
-  "/company/register",
-  validate(registerCompanySchema),
-  registerCompanyHandler
-);
-router.post(
-  "/company/login",
-  validate(loginCompanySchema),
-  loginCompanyHandler
-);
+// Rotas públicas (usuários)
 router.post(
   "/user/register",
   validate(registerUserSchema),
@@ -35,6 +26,18 @@ router.post(
 );
 router.post("/user/login", validate(loginUserSchema), loginUserHandler);
 
+router.post(
+  "/company/login",
+  validate(loginCompanySchema),
+  loginCompanyHandler
+);
+
+router.post(
+  "/company/register",
+  requireAdminKey,
+  validate(registerCompanySchema),
+  registerCompanyHandler
+);
 // Rotas protegidas
 router.get("/me", authenticate, getMeHandler);
 
