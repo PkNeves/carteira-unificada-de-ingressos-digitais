@@ -10,13 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "hardhat:compile": "hardhat compile",
-    "hardhat:deploy": "hardhat run scripts/deploy.ts",
-    "hardhat:deploy:sepolia": "hardhat run scripts/deploy.ts --network sepolia",
-    "hardhat:deploy:polygon": "hardhat run scripts/deploy.ts --network polygon",
-    "hardhat:deploy:polygon-mumbai": "hardhat run scripts/deploy.ts --network polygonMumbai",
-    "query:contract": "tsx scripts/query-contract.ts",
-    "generate:wallet": "tsx scripts/generate-sepolia-wallet.ts"
+    "hardhat:compile": "hardhat compile"
   },
   "keywords": [
     "nft",
