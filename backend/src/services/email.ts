@@ -1,22 +1,46 @@
 import nodemailer from 'nodemailer';
 
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
-const SMTP_USER = process.env.SMTP_USER || '';
-const SMTP_PASS = process.env.SMTP_PASS || '';
-const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@ticketwallet.com';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+function getFrontendUrl(): string {
+  const frontendUrl = process.env.FRONTEND_URL || 
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : undefined);
+  
+  if (!frontendUrl) {
+    throw new Error("FRONTEND_URL não configurada. Configure a variável de ambiente FRONTEND_URL.");
+  }
+  
+  return frontendUrl;
+}
 
-// Configuração do transporter de email
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: false, // true para 465, false para outras portas
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-});
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@ticketwallet.com';
+const FRONTEND_URL = getFrontendUrl();
+
+// Configuração do transporter de email (lazy initialization)
+let transporter: nodemailer.Transporter | null = null;
+
+function getTransporter(): nodemailer.Transporter {
+  if (!transporter) {
+    if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+      throw new Error(
+        "Configuração de email incompleta. Configure SMTP_HOST, SMTP_USER e SMTP_PASS."
+      );
+    }
+    
+    transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: false, // true para 465, false para outras portas
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+      },
+    });
+  }
+  return transporter;
+}
 
 /**
  * Envia email com magic link para login
@@ -66,7 +90,8 @@ export async function sendMagicLinkEmail(
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    const emailTransporter = getTransporter();
+    await emailTransporter.sendMail(mailOptions);
   } catch (error) {
     console.error('Erro ao enviar email:', error);
     throw new Error('Falha ao enviar email');
