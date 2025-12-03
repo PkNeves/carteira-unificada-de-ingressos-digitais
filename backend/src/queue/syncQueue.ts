@@ -4,7 +4,18 @@ import {
   syncTicketToBlockchain,
 } from "../services/sync";
 
-const REDIS_HOST = process.env.REDIS_HOST || "localhost";
+function getRedisHost(): string {
+  const redisHost = process.env.REDIS_HOST || 
+    (process.env.NODE_ENV === 'development' ? 'localhost' : undefined);
+  
+  if (!redisHost) {
+    throw new Error("REDIS_HOST não configurado. Configure a variável de ambiente REDIS_HOST.");
+  }
+  
+  return redisHost;
+}
+
+const REDIS_HOST = getRedisHost();
 const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379");
 
 // Cria fila para sincronização geral
