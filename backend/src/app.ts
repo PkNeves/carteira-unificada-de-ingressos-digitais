@@ -15,7 +15,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuração CORS
 function getAllowedOrigins(): string[] {
   if (process.env.ALLOWED_ORIGINS) {
     return process.env.ALLOWED_ORIGINS.split(",").map((origin) =>
@@ -23,12 +22,6 @@ function getAllowedOrigins(): string[] {
     );
   }
 
-  // Padrão para desenvolvimento local
-  if (process.env.NODE_ENV === "development") {
-    return ["http://localhost:5173", "http://localhost:5174"];
-  }
-
-  // Em produção, exige configuração explícita
   throw new Error(
     "ALLOWED_ORIGINS não configurada. Configure a variável de ambiente ALLOWED_ORIGINS."
   );
@@ -38,13 +31,10 @@ function isOriginAllowed(
   origin: string | undefined,
   allowedOrigins: string[]
 ): boolean {
-  // Permite requisições sem origin (ex: Postman, curl, mobile apps)
   if (!origin) return true;
 
-  // Permite todas as origens se configurado com *
   if (allowedOrigins.includes("*")) return true;
 
-  // Verifica se a origem está na lista permitida
   return allowedOrigins.includes(origin);
 }
 
