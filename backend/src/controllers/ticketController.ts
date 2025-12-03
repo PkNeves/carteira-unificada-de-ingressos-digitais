@@ -3,6 +3,8 @@ import { AuthRequest } from "../middleware/auth";
 import prisma from "../utils/prisma";
 import { getOrCreateUserWallet } from "../services/wallet";
 import { verifyTokenOnChain } from "../services/verifyToken";
+import { generateRandomPassword } from "../services/auth";
+import { sendWelcomeEmailWithTicket, isEmailConfigured } from "../services/email";
 import crypto from "crypto";
 import axios from "axios";
 
@@ -48,7 +50,9 @@ export async function createTickets(
         startDate,
       } = ticketData;
 
-      const { userId } = await getOrCreateUserWallet(email, "senha123");
+      // Gera senha aleatória para novos usuários
+      const randomPassword = generateRandomPassword();
+      const { userId, isNewUser } = await getOrCreateUserWallet(email, randomPassword);
       const externalId = crypto.randomBytes(16).toString("hex");
 
       const ticket = await prisma.ticket.create({
@@ -75,6 +79,22 @@ export async function createTickets(
           },
         },
       });
+
+      // Envia email de boas-vindas se for usuário novo
+      if (isNewUser) {
+        try {
+          if (isEmailConfigured()) {
+            await sendWelcomeEmailWithTicket(email, randomPassword, event.name);
+            console.log(`Email de boas-vindas enviado para ${email}`);
+          } else {
+            console.log(`SMTP não configurado. Email de boas-vindas não enviado para ${email}`);
+            console.log(`Senha gerada para ${email}: ${randomPassword}`);
+          }
+        } catch (emailError: any) {
+          console.error(`Erro ao enviar email para ${email}:`, emailError.message);
+          // Não falha a criação do ticket se o email falhar
+        }
+      }
 
       ticketsCriados.push(ticket);
     }

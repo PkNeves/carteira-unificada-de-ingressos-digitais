@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import prisma from "../utils/prisma";
 import { getOrCreateUserWallet } from "./wallet";
+import { sendWelcomeEmailNewUser, isEmailConfigured } from "./email";
 
 function getJwtSecret(): string {
   if (!process.env.JWT_SECRET) {
@@ -64,6 +65,32 @@ export async function comparePassword(
   hash: string
 ): Promise<boolean> {
   return bcrypt.compare(password, hash);
+}
+
+/**
+ * Gera uma senha aleatória segura
+ * Retorna uma string com 12 caracteres contendo letras maiúsculas, minúsculas e números
+ */
+export function generateRandomPassword(): string {
+  const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+  const numberChars = '0123456789';
+  const allChars = uppercaseChars + lowercaseChars + numberChars;
+  
+  let password = '';
+  
+  // Garante pelo menos uma letra maiúscula, uma minúscula e um número
+  password += uppercaseChars[Math.floor(Math.random() * uppercaseChars.length)];
+  password += lowercaseChars[Math.floor(Math.random() * lowercaseChars.length)];
+  password += numberChars[Math.floor(Math.random() * numberChars.length)];
+  
+  // Completa com caracteres aleatórios até 12 caracteres
+  for (let i = password.length; i < 12; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  
+  // Embaralha a senha para não ter padrão previsível
+  return password.split('').sort(() => Math.random() - 0.5).join('');
 }
 
 /**
@@ -186,6 +213,19 @@ export async function registerUser(
     email: user.email,
     type: "user",
   });
+
+  // Envia email de boas-vindas para usuário auto-cadastrado
+  try {
+    if (isEmailConfigured()) {
+      await sendWelcomeEmailNewUser(email);
+      console.log(`Email de boas-vindas enviado para ${email}`);
+    } else {
+      console.log(`SMTP não configurado. Email de boas-vindas não enviado para ${email}`);
+    }
+  } catch (emailError: any) {
+    console.error(`Erro ao enviar email de boas-vindas para ${email}:`, emailError.message);
+    // Não falha o registro se o email falhar
+  }
 
   return {
     id: user.id,

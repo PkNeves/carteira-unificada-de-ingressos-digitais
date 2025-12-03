@@ -139,6 +139,7 @@ export async function getOrCreateUserWallet(
 ): Promise<{
   userId: string;
   address: string;
+  isNewUser: boolean;
 }> {
   let user = await prisma.user.findUnique({
     where: { email },
@@ -191,11 +192,18 @@ export async function getOrCreateUserWallet(
         ...(backupData || {}),
       },
     });
+
+    return {
+      userId: user.id,
+      address: user.walletAddress || "",
+      isNewUser: true,
+    };
   }
 
   return {
     userId: user.id,
     address: user.walletAddress || "",
+    isNewUser: false,
   };
 }
 
